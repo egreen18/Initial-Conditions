@@ -12,20 +12,26 @@ end
 
 
 figure()
+% Plotting the ODE Results
 plot(results.tSpan, results.expectedValues, ...
     'LineWidth',3, ...
     'DisplayName','Expected Solution Path')
 
 hold on
 
+% Plotting the optimal sampling bubbles
 [x,y,sz] = bubbleBin(results.tSpan, results.expectedValues, ...
     results.optimalExperiment);
 bubblechart(x,y,sz,'DisplayName','Optimal Sampling')
 
+hold off
+
+% Beautifying
 title("Optimal Experimental Design for IC = "+results.IC)
 xlabel("Time")
 ylabel("X Count")
 grid on
-legend('Location','east')
+lgd = legend('Location','east');
+title(lgd, "dOpt = "+results.dOpt)
 
 end

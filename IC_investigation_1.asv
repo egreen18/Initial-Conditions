@@ -1,16 +1,12 @@
-IC = 0:1:20;
-max_dOpt = 0;
+%% Section 1 - IC = 0 is the best case for sub-equilibrium conditions
+IC = 0:2:10;
 all_dOpt = zeros(1,length(IC));
-max_IC = 0;
 for i = 1:length(IC)
     results = dOpt_birth_death(IC(i));
     bubblePlot(results);
     all_dOpt(i) = results.dOpt;
-    if results.dOpt > max_dOpt
-        max_dOpt = results.dOpt;
-        max_IC = results.IC;
-    end
 end
 
-print(max_IC)
-print(max_dOpt)
+%% Section 1.1 - 
+figure()
+scatter(IC, all_dOpt, ')

@@ -34,7 +34,7 @@ Model.propensityFunctions = {'k_birth','k_death * X'};
 Model.parameters = ({'k_birth',1; 'k_death',0.1});
 
 % Print a summary of the Model
-Model.summarizeModel
+% Model.summarizeModel
 
 %% Section 2 - Solve FSP model
 % Make a copy of the model for FSP

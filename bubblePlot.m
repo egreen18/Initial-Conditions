@@ -31,6 +31,7 @@ title("Optimal Experimental Design for IC = "+results.IC)
 xlabel("Time")
 ylabel("X Count")
 grid on
-legend('Location','east')
+lgd = legend('Location','east');
+title(lgd, "dOpt = "+sprintf('%.2e', results.dOpt))
 
 end
