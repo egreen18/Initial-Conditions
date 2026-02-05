@@ -1,0 +1,31 @@
+function [] = bubblePlot(results)
+%BUBBLEPLOT Takes dOpt "results" and plots the ODE solution with bubbles
+%   Overlays bubbles on the ODE solution to visualize the the optimal
+%   sampling times and quantites along the solution predicted by the ODE
+%   model. Works with the "bubbleBin" function.
+arguments (Input)
+    results
+end
+
+arguments (Output)
+end
+
+
+figure()
+plot(results.tSpan, results.expectedValues, ...
+    'LineWidth',3, ...
+    'DisplayName','Expected Solution Path')
+
+hold on
+
+[x,y,sz] = bubbleBin(results.tSpan, results.expectedValues, ...
+    results.optimalExperiment);
+bubblechart(x,y,sz,'DisplayName','Optimal Sampling')
+
+title("Optimal Experimental Design for IC = "+results.IC)
+xlabel("Time")
+ylabel("X Count")
+grid on
+legend('Location','east')
+
+end
