@@ -1,3 +1,20 @@
+%% Content
+% This investigation explores which SINGLE Initial Condition provides the 
+% most information for a simple Birth-Death system. Key parameters of the 
+% system include:
+%
+% k_birth   =   1
+% k_death   =   0.1
+% tSpan     =  [0,40]
+%
+% This system equilbriates to a population of 10 with a half life of 6.93s
+
+%% Preliminaries:
+clear
+close all
+clc
+addpath(genpath('../Rotation/SSIT'));
+
 %% Section 1: IC = 0 is the best case for sub-equilibrium IC
 IC = 0:1:10;
 all_dOpt = zeros(1,length(IC));

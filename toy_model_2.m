@@ -112,7 +112,8 @@ Model_FSP = Model_FSP.formPropensitiesGeneral('Model_FSP_2_2',false);
 Model_FSP.Solutions = Model_FSP.solve;
 
 % Plot marginal distributions at final time
-Model_FSP.plotFSP(Model_FSP.Solutions, Model_FSP.species, 'marginals', length(Model_FSP.tSpan))
+Model_FSP.plotFSP(Model_FSP.Solutions, Model_FSP.species, 'marginals', ...
+    length(Model_FSP.tSpan))
 
 %% Section 5 - Sensitivty Analysis
 % Make a copy of the FSP Solution for sensitivity analysis
