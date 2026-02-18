@@ -23,19 +23,20 @@ resolution = length(results.tSpan);
 if dim(2) > 1
     indices_temp = find(results.optimalExperiment);
     N_samples_temp = results.optimalExperiment(indices_temp);
-    indices_temp = ceil(indices_temp/200);
+    indices_temp = ceil(indices_temp/resolution);
     multi = 1;
+
+    % Combining like indices and summing their samples
+    indices = unique(indices_temp);
+    N_samples = zeros(size(indices));
+    for i = 1:length(indices)
+        N_samples(i) = sum(N_samples_temp(indices_temp==indices(i)));
+    end
 else
     % Should this not be multi-dimensional, set one dimensional indices
     multi = 0;
 end
 
-% Combining like indices and summing their samples
-indices = unique(indices_temp);
-N_samples = zeros(size(indices));
-for i = 1:length(indices)
-    N_samples(i) = sum(N_samples_temp(indices_temp==indices(i)));
-end
 
 % Calling bubbleBin and plotting for each identified index
 if multi
