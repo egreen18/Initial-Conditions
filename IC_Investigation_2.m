@@ -36,8 +36,9 @@ IC = 0:1:10;
 results = dOpt_birth_death(IC);
 bubblePlot(results);
 
-%% 4: A Heat Map to Explore the Space
-% Observations...
+%% Section 4-0: (Antiquated) A Heat Map to Explore the Space
+% Initial attempt at heatmap building; changed method to allow for
+% iterative analysis of this large system
 
 % Useful functions
 tri_count = @(n) n*(n+1)/2;
@@ -110,15 +111,85 @@ if ~skip
 end
 
 % Visualize the results
-imagesc(heat_matrix)
-set(gca, 'YDir', 'normal'); 
-xlabel('Initial Condition 1')
-ylabel('Initial Condition 2')
-colorbar
+figure()
+    imagesc(heat_matrix)
+    set(gca, 'YDir', 'normal'); 
+    xlabel('Initial Condition 1')
+    ylabel('Initial Condition 2')
+    colorbar
+    
+    % Update axis tick marks
+    xticks(1:1:length(IC))
+    yticks(1:1:length(IC))
+    
+    xticklabels(IC_range(1):1:IC_range(2))
+    yticklabels(IC_range(1):1:IC_range(2))
 
-% Update axis tick marks
-xticks(1:1:length(IC))
-yticks(1:1:length(IC))
+%% Section 4 - A Heat Map to Explore the Space
+% Observations
 
-xticklabels(IC_range(1):1:IC_range(2))
-yticklabels(IC_range(1):1:IC_range(2))
+% Input IC range
+IC_range = [0,100];
+
+% Pulling the saved progress or initializing if none is present
+if exist("birth_death_heat_iterative/results.mat","file") == 2
+    load("birth_death_heat_iterative/results.mat");
+    disp("Loaded heat_matrix from saved results.");
+else
+    heat_matrix = zeros(IC_range(2)+1,IC_range(2)+1);
+    disp("Initialized heat_matrix.")
+end
+
+% Checking to ensure appropriate matrix dimensions
+if length(heat_matrix) < IC_range(2)+1
+    old_data = heat_matrix;
+    heat_matrix = zeros(IC_range(2)+1,IC_range(2)+1);
+    heat_matrix(1:size(old_data, 1), 1:size(old_data, 2)) = old_data;
+end
+
+% Begin analysis
+i = IC_range(1);
+while i <= IC_range(2)
+    j = IC_range(1);
+    IC1 = i;
+    while j <= IC_range(2)
+        IC2 = j;
+
+        % Checking if the analysis has been stored already
+        if ~heat_matrix(i+1,j+1) == 0
+            % Increment IC2
+            j = j + 1; 
+            continue
+        end
+        
+        % Compute dOpt for the pair
+        IC_in = [IC1, IC2];
+        results = dOpt_birth_death(IC_in);
+
+        % Store results symetrically in the heat matrix
+        heat_matrix(i+1, j+1) = results.dOpt; 
+        heat_matrix(j+1, i+1) = results.dOpt; 
+        save("birth_death_heat_iterative/results.mat", 'heat_matrix');
+        disp("Processed and saved IC1: " + IC1 + ", IC2: " + IC2);
+
+        % Increment IC2
+        j = j + 1; 
+    end
+    % Increment IC1
+        i = i + 1; 
+end
+
+% Visualize the updated heat matrix
+figure()
+    ind = IC_range + 1;
+    imagesc(heat_matrix(ind(1):ind(2),ind(1):ind(2)));
+    set(gca, 'YDir', 'normal'); 
+    xlabel('Initial Condition 1');
+    ylabel('Initial Condition 2');
+    colorbar;
+    
+    % Update axis tick marks
+    xticks(1:1:(ind(2)-ind(1)+1));
+    yticks(1:1:(ind(2)-ind(1)+1));
+    xticklabels(IC_range(1):1:IC_range(2));
+    yticklabels(IC_range(1):1:IC_range(2));
