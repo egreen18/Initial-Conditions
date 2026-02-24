@@ -126,10 +126,10 @@ figure()
     yticklabels(IC_range(1):1:IC_range(2))
 
 %% Section 4 - A Heat Map to Explore the Space
-% Observations
+% Observations...
 
 % Input IC range
-IC_range = [0,100];
+IC_range = [0,70];
 
 % Pulling the saved progress or initializing if none is present
 if exist("birth_death_heat_iterative/results.mat","file") == 2
@@ -189,7 +189,22 @@ figure()
     colorbar;
     
     % Update axis tick marks
-    xticks(1:1:(ind(2)-ind(1)+1));
-    yticks(1:1:(ind(2)-ind(1)+1));
-    xticklabels(IC_range(1):1:IC_range(2));
-    yticklabels(IC_range(1):1:IC_range(2));
+    ticks = 1:1:(ind(2)-ind(1)+1);
+    labels = IC_range(1):1:IC_range(2);
+
+    if length(ticks) > 50
+        total = max(IC_range)/5+1;
+        adjustment = ceil(linspace(1,length(ticks),total));
+        ticks = ticks(adjustment);
+        labels = labels(adjustment);
+    elseif length(ticks) > 20 
+        total = max(IC_range)/2+1;
+        adjustment = ceil(linspace(1,length(ticks),total));
+        ticks = ticks(adjustment);
+        labels = labels(adjustment);
+    end
+
+    xticks(ticks);
+    yticks(ticks);
+    xticklabels(labels);
+    yticklabels(labels);
