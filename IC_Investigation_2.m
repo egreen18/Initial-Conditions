@@ -21,6 +21,7 @@ addpath(genpath('../Rotation/SSIT'));
 IC = 0:1:20;
 results = dOpt_birth_death(IC);
 bubblePlot(results);
+plotFIMResults(results);
 
 %% Section 2: Super Eq Case
 % Multi-IC sampling still equally weigths the two extrema when IC 
@@ -36,112 +37,38 @@ IC = 0:1:10;
 results = dOpt_birth_death(IC);
 bubblePlot(results);
 
-%% Section 4-0: (Antiquated) A Heat Map to Explore the Space
-% Initial attempt at heatmap building; changed method to allow for
-% iterative analysis of this large system
-
-% Useful functions
-tri_count = @(n) n*(n+1)/2;
-
-% Input IC range
-IC_range = [0,10];
-IC = IC_range(1):1:IC_range(2);
-
-% Checking for already computed results
-name = "results_"+IC_range(1)+"_"+IC_range(2)+".mat";
-ignore_existing = 0;    % Ignore pre-computed results?
-skip = 0;
-if ~ignore_existing
-    if exist("birth_death_heat/"+name,"file") == 2
-        load("birth_death_heat/"+name);
-        skip = 1;
-        disp("Loaded pre-computed result from birth_death_heat/"+name)
-    end
-end
-
-% Skip analysis if a save file was succesfully loaded
-if ~skip
-    disp("Analyzing IC pairs over range "+IC_range(1)+" to "+IC_range(2)+"...")
-
-    % Initialize the triangular matrix
-    heat_matrix = zeros(length(IC));
-    
-    % Transform IC range into a 2-D triangular space to ignore symmetries
-    k = 1;
-    for i = 1:length(IC)
-        IC1 = IC(i);
-        j = 1;
-        IC2 = IC(j);
-        while IC2 <= IC1
-            % Provide two IC's to the model
-            IC_in = [IC1, IC2];
-            results = dOpt_birth_death(IC_in);
-    
-            % Store the results into the triangular matrix
-            heat_matrix(i,j) = results.dOpt;
-    
-            % Display Progress
-            disp(k+"/"+tri_count(length(IC))+"...")
-
-            % Update counters
-            k = k + 1;
-            j = j + 1;
-    
-            % Error proofing
-            if j > length(IC)
-                IC2 = inf;
-            else
-                IC2 = IC(j);
-            end
-        end
-    end
-    
-    
-    % Fill in the rest of the matrix using symmetries
-    heat_matrix = tril(heat_matrix) + tril(heat_matrix,-1)';
-    
-    % Transform the matrix to work with imagesc function
-    heat_matrix = rot90(heat_matrix);
-    heat_matrix = flipud(heat_matrix);
-    
-    % Saving results
-    save("birth_death_heat/"+name) 
-    disp("Finished and saved results to birth_death_heat/"+name)
-
-end
-
-% Visualize the results
-figure()
-    imagesc(heat_matrix)
-    set(gca, 'YDir', 'normal'); 
-    xlabel('Initial Condition 1')
-    ylabel('Initial Condition 2')
-    colorbar
-    
-    % Update axis tick marks
-    xticks(1:1:length(IC))
-    yticks(1:1:length(IC))
-    
-    xticklabels(IC_range(1):1:IC_range(2))
-    yticklabels(IC_range(1):1:IC_range(2))
-
 %% Section 4 - A Heat Map to Explore the Space
 % Observations...
 
 % Input IC range
-IC_range = [0,70];
+IC_range = [0,40];
+ellipse_plot = 1;
 
 % Pulling the saved progress or initializing if none is present
 if exist("birth_death_heat_iterative/results.mat","file") == 2
     load("birth_death_heat_iterative/results.mat");
     disp("Loaded heat_matrix from saved results.");
-else
+end
+
+% Initializing storage matrices if not loaded
+if ~exist('heat_matrix', 'var')
     heat_matrix = zeros(IC_range(2)+1,IC_range(2)+1);
     disp("Initialized heat_matrix.")
 end
 
+if ~exist('fim_matrix', 'var')
+    fim_matrix = zeros(IC_range(2)+1,IC_range(2)+1,4);
+    disp("Initialized fim_matrix.")
+end
+
 % Checking to ensure appropriate matrix dimensions
-if length(heat_matrix) < IC_range(2)+1
+if size(heat_matrix,1) < IC_range(2)+1
+    old_data = heat_matrix;
+    heat_matrix = zeros(IC_range(2)+1,IC_range(2)+1);
+    heat_matrix(1:size(old_data, 1), 1:size(old_data, 2)) = old_data;
+end
+
+if size(heat_matrix,1) < IC_range(2)+1
     old_data = heat_matrix;
     heat_matrix = zeros(IC_range(2)+1,IC_range(2)+1);
     heat_matrix(1:size(old_data, 1), 1:size(old_data, 2)) = old_data;

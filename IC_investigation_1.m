@@ -22,6 +22,7 @@ for i = 1:length(IC)
     results = dOpt_birth_death(IC(i));
     bubblePlot(results);
     all_dOpt(i) = results.dOpt;
+    plotFIMResults(results);
 end
 
 %% Section 1.1: Information decreases exponentially from IC 0 (sub-eq)

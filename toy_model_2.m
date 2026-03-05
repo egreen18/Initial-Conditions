@@ -4,9 +4,10 @@
 % Begin with a toy model: simple birth-death
 
 %% Preliminaries:
-% clear
-% close all
+clear
+close all
 addpath(genpath('../Rotation/SSIT'));
+clc
 
 %% Section 1 - Define Model
 % Initiate model
@@ -15,17 +16,18 @@ Model = SSIT;
 % One species in system, protein X
 Model.species = {'X'};   
 
-% No protein at time 0
-Model.initialCondition = [0];
+% X at t=0
+Model.initialCondition = [0, 20];
+Model.initialProbs = [0.5 0.5];
 
 % Set stoichiometry of reactions
-Model.stoichiometry = [1,1];   % [birth, birth2, death]
+Model.stoichiometry = [1,-1];   % [birth, death]
 
 % Set propensity functions assuming population-independent birth
-Model.propensityFunctions = {'k_birth','k_birth_2'};
+Model.propensityFunctions = {'k_birth','k_death * X'};
 
 % Set initial guesses for parameters:
-Model.parameters = ({'k_birth',1; 'k_birth_2',1});
+Model.parameters = ({'k_birth',1; 'k_death',0.1});
 
 % Print a summary of the Model
 Model.summarizeModel
@@ -103,7 +105,7 @@ Model_FSP.fspOptions.fspTol = 1e-4;
 Model_FSP.fspOptions.bounds = [50];
 
 % Enable steady state initial distribution approximation
-Model_FSP.fspOptions.initApproxSS = true;
+Model_FSP.fspOptions.initApproxSS = false;
 
 % Create symbolic propensity functions
 Model_FSP = Model_FSP.formPropensitiesGeneral('Model_FSP_2_2',false);
@@ -112,8 +114,13 @@ Model_FSP = Model_FSP.formPropensitiesGeneral('Model_FSP_2_2',false);
 Model_FSP.Solutions = Model_FSP.solve;
 
 % Plot marginal distributions at final time
-Model_FSP.plotFSP(Model_FSP.Solutions, Model_FSP.species, 'marginals', ...
-    length(Model_FSP.tSpan))
+Model_FSP.plotFSP(plotType='marginals', indTimes = [1,30,80,200])
+% Model_FSP.plotFSP(Model_FSP.Solutions, Model_FSP.species, 'marginals', ...
+%     30)
+% Model_FSP.plotFSP(Model_FSP.Solutions, Model_FSP.species, 'marginals', ...
+%     80)
+% Model_FSP.plotFSP(Model_FSP.Solutions, Model_FSP.species, 'marginals', ...
+%     200)
 
 %% Section 5 - Sensitivty Analysis
 % Make a copy of the FSP Solution for sensitivity analysis

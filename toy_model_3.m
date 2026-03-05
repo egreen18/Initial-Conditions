@@ -17,7 +17,7 @@ Model = SSIT;
 Model.species = {'offGene';'onGene';'mRNA'}; 
 
 % Set initial condition:
-Model.initialCondition = IC;           
+Model.initialCondition = IC;    
 
 % Set stoichiometry of reactions:
 Model.stoichiometry = [-1,1,0,0;...

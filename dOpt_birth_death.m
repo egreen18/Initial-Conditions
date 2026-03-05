@@ -66,7 +66,7 @@ for i = 1:length(IC)
     Model_FSP.fspOptions.initApproxSS = false;
     
     % Create symbolic propensity functions
-    Model_FSP = Model_FSP.formPropensitiesGeneral('Model_FSP_dOpt',false);
+    Model_FSP = Model_FSP.formPropensitiesGeneral('Model_FSP_dOpt_2',false);
     
     % Solve Model
     Model_FSP.Solutions = Model_FSP.solve;
@@ -98,17 +98,19 @@ end
 % The resolution of the Time Span is the same as the number of samples
 % allowed in the optimization.
 optimal_experiment = Model_FIM.optimizeCellCounts(Model_fimResults,...
-    resolution,'Determinant');
+    resolution,'D-opt');
 
 % Save to results
 results.tSpan = Model_FSP.tSpan;
 results.optimalExperiment = optimal_experiment;
+results.parameters = Model_FSP.parameters;
 
 [Model_fimTotal_opt,~,~] = ...
     Model_FIM.evaluateExperiment(Model_fimResults,optimal_experiment);
 
 % Save to results
 results.dOpt = det(Model_fimTotal_opt{1});
+results.fimTotal = Model_fimTotal_opt{1};
 
 %% Section 5 - Solve ODE model
 % Predefining expected value matrix
