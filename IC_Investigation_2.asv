@@ -41,7 +41,7 @@ bubblePlot(results);
 % Observations...
 
 % Input IC range
-IC_range = [0,110];
+IC_range = [0,40];
 ellipse_plot = 1;
 
 % Pulling the saved progress or initializing if none is present
@@ -110,6 +110,59 @@ end
 figure()
     ind = IC_range + 1;
     imagesc(heat_matrix(ind(1):ind(2),ind(1):ind(2)));
+    set(gca, 'YDir', 'normal'); 
+    xlabel('Initial Condition 1');
+    ylabel('Initial Condition 2');
+    colorbar;
+    
+    % Update axis tick marks
+    ticks = 1:1:(ind(2)-ind(1)+1);
+    labels = IC_range(1):1:IC_range(2);
+
+    if length(ticks) > 50
+        total = max(IC_range)/5+1;
+        adjustment = ceil(linspace(1,length(ticks),total));
+        ticks = ticks(adjustment);
+        labels = labels(adjustment);
+    elseif length(ticks) > 20 
+        total = max(IC_range)/2+1;
+        adjustment = ceil(linspace(1,length(ticks),total));
+        ticks = ticks(adjustment);
+        labels = labels(adjustment);
+    end
+
+    xticks(ticks);
+    yticks(ticks);
+    xticklabels(labels);
+    yticklabels(labels);
+
+%% Section 5 - Normalizing the Heat Map to Expected Values
+% Using the linear combination hypothesis, the heat map can be normalized
+% to a score which defines the vairation from the expected value.
+
+% Input IC range
+IC_range = [0,40];
+
+% Load Single IC data for scoring pairs
+load("single_IC_score.mat")
+
+% Load heat matrix from above
+load("birth_death_heat_iterative/results.mat");
+
+normalized_heat_matrix = NaN(size(heat_matrix));
+
+for i = 1:size(heat_matrix,1)
+    for j = 1:size(heat_matrix,2)
+        expected_value = (single_IC_score(i) + single_IC_score(j))/2;
+        score = (heat_matrix(i,j) - expected_value) / expected_value;
+        normalized_heat_matrix = score;
+    end
+end
+
+% Visualize the updated heat matrix
+figure()
+    ind = IC_range + 1;
+    imagesc(normalized_heat_matrix(ind(1):ind(2),ind(1):ind(2)));
     set(gca, 'YDir', 'normal'); 
     xlabel('Initial Condition 1');
     ylabel('Initial Condition 2');

@@ -16,7 +16,7 @@ clc
 addpath(genpath('../Rotation/SSIT'));
 
 %% Section 1: IC = 0 is the best case for sub-equilibrium IC
-IC = 0:1:10;
+IC = 4;
 all_dOpt = zeros(1,length(IC));
 for i = 1:length(IC)
     results = dOpt_birth_death(IC(i));
@@ -53,8 +53,8 @@ xlabel('Initial Condition')
 ylabel('D-Optimatlity Criterion')
 title('Information v. Initial Condition for Super-Equilibrium Conditions')
 grid on
-%% Section 3: A vector of all Single IC scores form 0 to ~100
-IC = 0:1:120;
+%% Section 3: A vector of all Single IC scores form 0 to 100
+IC = 0:1:100;
 info = zeros(1,length(IC));
 
 % Pulling the saved progress or initializing if none is present
@@ -69,21 +69,11 @@ if ~exist('single_IC_score', 'var')
     disp("Initialized single_IC_score.")
 end
 
-% Checking to ensure appropriate matrix dimensions
-if size(single_IC_score,1) < length(IC)
-    old_data = single_IC_score;
-    single_IC_score = NaN(1,length(IC));
-    single_IC_score(1:size(old_data, 1), 1:size(old_data, 2)) = old_data;
-end
-
-% Computing scores
 for i = 1:length(IC)
-    if isnan(single_IC_score(i))
+    if single_IC_score(i) == 0
         results = dOpt_birth_death(IC(i));
         single_IC_score(i) = results.dOpt;
-        save("single_IC_score.mat", 'single_IC_score');
+        save("birth_death_heat_iterative/results.mat", 'heat_matrix');
         disp("Saved D-Opt score for IC = "+string(IC(i)))
     end
 end
-
-disp("All Single IC scores have been computed and stored in single_IC_score.mat")
