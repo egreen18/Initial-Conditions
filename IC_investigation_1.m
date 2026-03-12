@@ -53,8 +53,8 @@ xlabel('Initial Condition')
 ylabel('D-Optimatlity Criterion')
 title('Information v. Initial Condition for Super-Equilibrium Conditions')
 grid on
-%% Section 3: A vector of all Single IC scores form 0 to ~100
-IC = 0:1:120;
+%% Section 3: A vector of all Single IC scores form 0 to 200
+IC = 0:1:200;
 info = zeros(1,length(IC));
 
 % Pulling the saved progress or initializing if none is present

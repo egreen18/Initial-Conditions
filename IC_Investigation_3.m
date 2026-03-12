@@ -254,7 +254,7 @@ grid on
 title("Is the Mixed IC Case a Linear Combination of It's Components?")
 legend
 %% Section 7: Examining All Unique Pairs
-IC_range = [0,10];
+IC_range = [0,200];
 prob = [0.5, 0.5];
 
 % Pulling the saved progress or initializing if none is present
@@ -323,6 +323,7 @@ end
 figure()
     ind = IC_range + 1;
     imagesc(mixed_ic_pairs(ind(1):ind(2),ind(1):ind(2)));
+    title('Information Heat Map of IC Pairs in the Mixed IC Case')
     set(gca, 'YDir', 'normal'); 
     xlabel('Initial Condition 1');
     ylabel('Initial Condition 2');
@@ -350,12 +351,12 @@ figure()
     xticklabels(labels);
     yticklabels(labels);
 
-%% Section 8: Normalize the heat map
+%% Section 8: Normalize the Heat Map
 % Using the linear combination hypothesis, the heat map can be normalized
 % to a score which defines the vairation from the expected value.
 
 % Input IC range
-IC_range = [0,10];
+IC_range = [0,100];
 
 % Load Single IC data for scoring pairs
 load("single_IC_score.mat")

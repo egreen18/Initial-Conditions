@@ -254,11 +254,8 @@ grid on
 title("Is the Mixed IC Case a Linear Combination of It's Components?")
 legend
 %% Section 7: Examining All Unique Pairs
-IC_range = [0,10];
+IC_range = [0,100];
 prob = [0.5, 0.5];
-
-% Load Single IC data for scoring pairs
-load("single_IC_score.mat")
 
 % Pulling the saved progress or initializing if none is present
 if exist("cache/mixed_ic_pairs.mat","file") == 2
@@ -279,12 +276,6 @@ if size(mixed_ic_pairs,1) < IC_range(2)+1
     mixed_ic_pairs(1:size(old_data, 1), 1:size(old_data, 2)) = old_data;
 end
 
-if size(mixed_ic_pairs,1) < IC_range(2)+1
-    old_data = mixed_ic_pairs;
-    mixed_ic_pairs = zeros(IC_range(2)+1,IC_range(2)+1);
-    mixed_ic_pairs(1:size(old_data, 1), 1:size(old_data, 2)) = old_data;
-end
-
 % Begin analysis
 i = IC_range(1);
 while i <= IC_range(2)
@@ -299,24 +290,23 @@ while i <= IC_range(2)
             j = j + 1; 
             continue
         end
-        
+
+        % Define the IC pair
+        IC_in = [IC1, IC2];
+        prob_in = prob;
+
         % Check for the Single IC diagonal case
         if IC1 == IC2
-            score = 0;
-        else
-
-            % Compute dOpt for the pair
-            IC_in = [IC1, IC2];
-            results = dOpt_birth_death_mixed(IC_in,prob);
-    
-            % Calculate the score
-            expected_value = (single_IC_score(IC1+1) + single_IC_score(IC2+1))/2;
-            score = (results.dOpt - expected_value) / expected_value;
-    
+            IC_in = IC1;
+            prob_in = 1;
         end
+
+        % Compute dOpt for the pair
+        results = dOpt_birth_death_mixed(IC_in,prob_in);
+    
         % Store results symetrically
-        mixed_ic_pairs(i+1, j+1) = score; 
-        mixed_ic_pairs(j+1, i+1) = score; 
+        mixed_ic_pairs(i+1, j+1) = results.dOpt; 
+        mixed_ic_pairs(j+1, i+1) = results.dOpt; 
 
         % Save results in mixed_ic_pairs.mat
         save("cache/mixed_ic_pairs.mat", 'mixed_ic_pairs');
@@ -333,6 +323,62 @@ end
 figure()
     ind = IC_range + 1;
     imagesc(mixed_ic_pairs(ind(1):ind(2),ind(1):ind(2)));
+    title('Information Heat Map of IC Pairs in the Mixed IC Case')
+    set(gca, 'YDir', 'normal'); 
+    xlabel('Initial Condition 1');
+    ylabel('Initial Condition 2');
+    colorbar;
+    
+    % Update axis tick marks
+    ticks = 1:1:(ind(2)-ind(1)+1);
+    labels = IC_range(1):1:IC_range(2);
+
+    if length(ticks) > 50
+        total = max(IC_range)/5+1;
+        adjustment = ceil(linspace(1,length(ticks),total));
+        ticks = ticks(adjustment);
+        labels = labels(adjustment);
+    elseif length(ticks) > 20 
+        total = max(IC_range)/2+1;
+        adjustment = ceil(linspace(1,length(ticks),total));
+        ticks = ticks(adjustment);
+        labels = labels(adjustment);
+    end
+    
+    % Placing ticks
+    xticks(ticks);
+    yticks(ticks);
+    xticklabels(labels);
+    yticklabels(labels);
+
+%% Section 8: Normalize the Heat Map
+% Using the linear combination hypothesis, the heat map can be normalized
+% to a score which defines the vairation from the expected value.
+
+% Input IC range
+IC_range = [0,40];
+
+% Load Single IC data for scoring pairs
+load("single_IC_score.mat")
+
+% Load heat matrix from above
+load("cache/mixed_ic_pairs.mat");
+
+normalized_mixed_ic_pairs = NaN(size(mixed_ic_pairs));
+
+for i = 1:size(mixed_ic_pairs,1)
+    for j = 1:size(mixed_ic_pairs,2)
+        expected_value = (single_IC_score(i) + single_IC_score(j))/2;
+        score = (mixed_ic_pairs(i,j) - expected_value) / expected_value;
+        normalized_mixed_ic_pairs(i,j) = score;
+    end
+end
+
+% Visualize the updated heat matrix
+figure()
+    ind = IC_range + 1;
+    imagesc(normalized_mixed_ic_pairs(ind(1):ind(2),ind(1):ind(2)));
+    title('Normalized Information Heat Map of IC Pairs in the Mixed IC Case')
     set(gca, 'YDir', 'normal'); 
     xlabel('Initial Condition 1');
     ylabel('Initial Condition 2');

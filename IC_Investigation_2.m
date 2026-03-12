@@ -142,7 +142,7 @@ figure()
 % to a score which defines the vairation from the expected value.
 
 % Input IC range
-IC_range = [0,100];
+IC_range = [0,40];
 
 % Load Single IC data for scoring pairs
 load("single_IC_score.mat")

@@ -78,7 +78,7 @@ Model_FSP.fspOptions.bounds = [30];
 Model_FSP.fspOptions.initApproxSS = false;
 
 % Create symbolic propensity functions
-Model_FSP = Model_FSP.formPropensitiesGeneral('Model_FSP_dOpt_2',false);
+Model_FSP = Model_FSP.formPropensitiesGeneral('Model_FSP_dOpt',false);
 
 % Solve Model
 Model_FSP.Solutions = Model_FSP.solve;
@@ -97,7 +97,7 @@ Model_sens.sensOptions.solutionMethod = 'forward';
 
 
 % Solve the sensitivity problem
-[~,~,Model_sens] = Model_sens.solve(Model_FSP.Solutions.stateSpace);
+Model_sens.Solutions = Model_sens.solve(Model_sens.Solutions.stateSpace);
 
 %% Section 4 - FIM
 % Create a copy of the sens model to compute the FIM
@@ -109,7 +109,7 @@ Model_fimResults = Model_FIM.computeFIM(Model_sens.Solutions.sens);
 
 % Compute the optimal experimental design per D-Optimality
 optimal_experiment = Model_FIM.optimizeCellCounts(Model_fimResults,...
-    length(Model_FIM.tSpan),'D-opt');
+    length(Model_FIM.tSpan),'Determinant');
 
 [Model_fimTotal_opt,~,~] = ...
     Model_FIM.evaluateExperiment(Model_fimResults,optimal_experiment);
