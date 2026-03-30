@@ -1,0 +1,159 @@
+% This script serves as a wrapper for passing through a modified y0 to the
+% sensitivity function in the SSIT. This modified y0 will ...
+
+%% Preliminaries:
+clear
+close all
+clc
+addpath(genpath('../Rotation/SSIT'));
+
+%% Section 1 - Define Model
+% Intitiate results structure
+IC = [2;0;0];
+results = struct;
+results.IC = IC;
+
+% Create an SSIT instance and call it 'Model':
+Model = SSIT;    
+
+% Set species names for bursting gene expression model:
+Model.species = {'offGene';'onGene';'mRNA'}; 
+
+% Set initial condition:
+Model.initialCondition = IC;    
+
+% Set stoichiometry of reactions:
+Model.stoichiometry = [-1,1,0,0;...
+                        1,-1,0,0;...
+                        0,0,1,-1]; 
+
+% Set propensity functions:
+Model.propensityFunctions = {'kon * offGene';'koff * onGene';...
+                             'kr * onGene';'dr * mRNA'}; 
+
+% Set initial guesses for parameters:
+Model.parameters = ({'kon',0.2; 'koff',0.2; 'kr',10; 'dr',1});
+
+% Print a summary of STL1 Model:
+Model.summarizeModel
+
+%% Section 2 - Solve FSP model
+% Make a copy of the model for FSP
+Model_FSP = Model;
+
+% Set the times at which distributions will be computed:
+Model_FSP.tSpan = linspace(0,40,200);
+
+% Set the solution scheme to FSP
+Model_FSP.solutionScheme = 'FSP';
+
+% Set the FSP 1-norm error tolerance
+Model_FSP.fspOptions.fspTol = 1e-4;
+
+% Guess initial bounds on FSP StateSpace
+Model_FSP.fspOptions.bounds = [30];
+
+% Enable steady state initial distribution approximation
+% NOTICE - steady state approximation sets the model to equilibrium at t0
+Model_FSP.fspOptions.initApproxSS = false;
+
+% Create symbolic propensity functions
+Model_FSP = Model_FSP.formPropensitiesGeneral('Model_FSP_dOpt_2',false);
+
+% Solve Model
+Model_FSP.Solutions = Model_FSP.solve;
+
+% Plot marginal distributions at final time
+timeInd = [10,50,100,200];
+% Model_FSP.plotFSP(plotType='marginals', indTimes = timeInd)
+
+%% Section 3 - Sensitivity Analysis
+% Make a copy of the FSP Solution for sensitivity analysis
+Model_sens = Model_FSP;
+
+% Set solution schemes to FSP sensitivity
+Model_sens.solutionScheme = 'fspSens'; 
+Model_sens.sensOptions.solutionMethod = 'forward';
+
+
+% Solve the sensitivity problem
+[~,~,Model_sens] = Model_sens.solve(Model_FSP.Solutions.stateSpace);
+
+%% Section 4.1 - Constructing the y0 vector
+% Gating probability tensor to only include the On-Gene Case [any, 2, any]
+% -- SANDBOX --
+% state = Model_sens.Solutions.stateSpace.states;
+% 
+% prob = Model_sens.Solutions.fsp{end}.p.data;
+% 
+% sens = [];
+% for i=1:length(Model.parameters)
+%     % Model_sens.Solutions.sens.data{end}.S(i).data
+% end
+% 
+% prob([3,1,15;3,1,16]);
+% 
+% state(:,state(2,:)==2)'+1;
+% 
+% prob.vals(state(2,:)==2);
+% 
+% gate_prob_temp = prob(state(:,state(2,:)==2)'+1);
+% 
+% shape = state(2,:)==2;
+% 
+% gate_prob = zeros(size(shape));
+% gate_prob(shape) = gate_prob_temp;
+% size(gate_prob)
+
+%% Section 4.2 - Constructing the y0 Vector
+% -- BEGIN WORK --
+
+% Retrieving state space
+state = Model_sens.Solutions.stateSpace.states;
+
+% Logical gate: only states with 2 OnGene
+gate = state(2,:)==2;
+
+% -- PROBABILITY MATRIX --
+% Retrieving the matrix
+prob = Model_sens.Solutions.fsp{end}.p.data;
+
+gate_prob = zeros(size(gate));              % Maintaining the original size
+gate_prob(gate) = prob(state(:,gate)'+1);   % Transforming indices for tensor
+
+% Normalizing the probability matrix
+gate_prob = gate_prob/sum(gate_prob);
+
+% -- SENSITIVITY MATRIX --
+% Maintaining the original size
+gate_sens = zeros(length(Model.parameters),length(gate));
+for i = 1:length(Model.parameters)
+    % Retrieving per parameter sensitivity
+    sens = Model_sens.Solutions.sens.data{end}.S(i).data;
+
+    % Gating
+    gate_sens(i,gate) = sens(state(:,gate)'+1);
+end
+
+% Flattening the gate_sens matrix
+gate_sens = gate_sens(:);
+
+% Normalize the sensitivity matrix to the probability matrix
+gate_sens = gate_sens / sum(gate_prob);
+
+% Construct y0
+y0 = [gate_prob'; gate_sens];
+
+
+%% Section 4.3 - Feeding the y0 vector into the SSIT Model Object
+Model_gate = Model_sens;
+
+% Set solution schemes to FSP sensitivity
+Model_gate.solutionScheme = 'fspSens'; 
+Model_gate.sensOptions.solutionMethod = 'forward';
+
+% Feed y0 from Section 4.2
+Model_gate.y0 = y0;
+
+% Solve the sensitivity problem
+[~,~,Model_gate] = Model_gate.solve(Model_FSP.Solutions.stateSpace);

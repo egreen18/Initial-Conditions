@@ -85,7 +85,7 @@ Model_FSP.Solutions = Model_FSP.solve;
 
 % Plot marginal distributions at final time
 timeInd = [10,50,100,200];
-% Model_FSP.plotFSP(plotType='marginals', indTimes = timeInd)
+Model_FSP.plotFSP(plotType='marginals', indTimes = timeInd)
 
 %% Section 3 - Sensitivty Analysis
 % Make a copy of the FSP Solution for sensitivity analysis

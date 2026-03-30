@@ -99,7 +99,7 @@ plot(IC, all_dOpt_eq, 'DisplayName', 'Gene Equilibrium at t0', 'LineWidth',2)
 legend
 xlabel('Initial mRNA Population')
 ylabel('D-Optimality Criterion')
-title('How does initial gene state effect available information?')
+title('How does initial gene state affect available information?')
 
 %% Section 5: Repeat the above exploration for super-eq IC
 
@@ -151,6 +151,31 @@ grid on
 plot(IC, sup_dOpt_off, 'DisplayName', 'All Genes On at t0', 'LineWidth',2)
 plot(IC, sup_dOpt_on, 'DisplayName', 'All Genes Off at t0', 'LineWidth',2)
 plot(IC, sup_dOpt_eq, 'DisplayName', 'Gene Equilibrium at t0', 'LineWidth',2)
+legend
+xlabel('Initial mRNA Population')
+ylabel('D-Optimality Criterion')
+title('How does initial gene state effect available information?')
+
+%% Section 5.5 Total Comparison Plot
+% Combining Sub-Eq and Super-Eq plots
+load("cache/Investigation_4_Results.mat")
+
+
+% Defining IC range
+IC = [0:1:9,10:1:40];
+
+% Combining like lines
+dOpt_off = [all_dOpt_off(1:end-1),sup_dOpt_off];
+dOpt_on = [all_dOpt_on(1:end-1),sup_dOpt_on];
+dOpt_eq = [all_dOpt_eq(1:end-1),sup_dOpt_eq];
+
+% Plotting
+figure()
+hold on
+grid on
+plot(IC, dOpt_off, 'DisplayName', 'All Genes On at t0', 'LineWidth',2)
+plot(IC, dOpt_on, 'DisplayName', 'All Genes Off at t0', 'LineWidth',2)
+plot(IC, dOpt_eq, 'DisplayName', 'Gene Equilibrium at t0', 'LineWidth',2)
 legend
 xlabel('Initial mRNA Population')
 ylabel('D-Optimality Criterion')
