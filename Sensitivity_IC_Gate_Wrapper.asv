@@ -51,7 +51,7 @@ Model_FSP.solutionScheme = 'FSP';
 Model_FSP.fspOptions.fspTol = 1e-4;
 
 % Guess initial bounds on FSP StateSpace
-Model_FSP.fspOptions.bounds = [30];
+% Model_FSP.fspOptions.bounds = [30];
 
 % Enable steady state initial distribution approximation
 % NOTICE - steady state approximation sets the model to equilibrium at t0
@@ -78,6 +78,54 @@ Model_sens.sensOptions.solutionMethod = 'forward';
 
 % Solve the sensitivity problem
 [~,~,Model_sens] = Model_sens.solve(Model_FSP.Solutions.stateSpace);
+
+%% Section 3.1 - FSP Test
+% Make a copy of the model for FSP
+Model_FSP_test = Model;
+
+% Set the times at which distributions will be computed:
+Model_FSP_test.tSpan = linspace(0,40,200);
+
+% Set the solution scheme to FSP
+Model_FSP_test.solutionScheme = 'FSP';
+
+% Set the FSP 1-norm error tolerance
+Model_FSP_test.fspOptions.fspTol = 1e-4;
+
+% Guess initial bounds on FSP StateSpace
+% Model_FSP.fspOptions.bounds = [30];
+
+% Enable steady state initial distribution approximation
+% NOTICE - steady state approximation sets the model to equilibrium at t0
+Model_FSP_test.fspOptions.initApproxSS = false;
+
+% Create symbolic propensity functions
+Model_FSP_test = Model_FSP_test.formPropensitiesGeneral('Model_FSP_dOpt_2',false);
+
+% ------
+
+% Retrieving state space
+state = Model_sens.Solutions.fsp{end}.p.data.subs';
+
+% Logical gate: only states with 10 or more mRNA
+gate = state(3,:)>=10+1; % Plus one to transform for 0-indexing
+
+% -- PROBABILITY MATRIX --
+% Retrieving the matrix
+prob = Model_FSP.Solutions.fsp{end}.p.data.vals;
+
+gate_prob = prob(gate);   
+gate_prob = gate_prob/sum(gate_prob);
+
+Model_FSP_test.initialCondition = state(:,gate)-1; % Minus one for 0-index
+Model_FSP_test.initialProbs = gate_prob;
+
+% Solve Model
+Model_FSP_test.Solutions = Model_FSP_test.solve;
+
+% Plot marginal distributions at final time
+timeInd = [1,50,100,200];
+Model_FSP_test.plotFSP(plotType='marginals', indTimes = timeInd)
 
 %% Section 4.1 - Constructing the y0 vector
 % Gating probability tensor to only include the On-Gene Case [any, 2, any]
@@ -121,6 +169,8 @@ prob = Model_sens.Solutions.fsp{end}.p.data;
 gate_prob = zeros(size(gate));              % Maintaining the original size
 gate_prob(gate) = prob(state(:,gate)'+1);   % Transforming indices for tensor
 
+gate_prob = [gate_prob, zeros(1,6)];        % Appending 6 zeros for the constraint
+
 % Normalizing the probability matrix
 gate_prob = gate_prob/sum(gate_prob);
 
@@ -135,12 +185,30 @@ for i = 1:length(Model.parameters)
     gate_sens(i,gate) = sens(state(:,gate)'+1);
 end
 
+gate_sens = [gate_sens,zeros(4,6)];         % Appending 6 zeros for the constraint
+
 % Flattening the gate_sens matrix
 gate_sens = gate_sens(:);
 
 % Normalize the sensitivity matrix to the probability matrix
+% NOTE - Should this be normalized to sum to zero? If so, normalize by
+% subtracting the average from each value on a per parameter basis
 gate_sens = gate_sens / sum(gate_prob);
+
+% Construct y0
+y0 = [gate_prob'; gate_sens];
 
 
 %% Section 4.3 - Feeding the y0 vector into the SSIT Model Object
-Model_gate = 
+Model_gate = Model_sens;
+
+% Set solution schemes to FSP sensitivity
+Model_gate.solutionScheme = 'fspSens'; 
+Model_gate.sensOptions.solutionMethod = 'forward';
+Model_gate.fspOptions.verbose = true;
+
+% Feed y0 from Section 4.2
+Model_gate.y0 = y0;
+
+% Solve the sensitivity problem
+[~,~,Model_gate] = Model_gate.solve(Model_FSP.Solutions.stateSpace);

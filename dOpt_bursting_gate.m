@@ -1,4 +1,4 @@
-function [results, model] = dOpt_bursting(IC, gene_state)
+function [results, model] = dOpt_bursting_gate(IC, gene_state, gate_param, gate_val)
 %DOPT_SOLVE Solves the Toy Bursting-Gene model for the dOpt criterion
 %   Takes a scaler Initial Condition value and returns the "results"
 %   structure which contains multiple computed results. The function may
@@ -6,9 +6,15 @@ function [results, model] = dOpt_bursting(IC, gene_state)
 %   In this event, IC should be a vector containing all Initial Conditions 
 %   to be considered. Initial gene on/off distributuion is provided by the
 %   variable "gene_state", which must be a vertical vector of length 2. 
+%
+%   After initial sensitivity calculations, the system is gated using the
+%   provided inputs and the solution continues with a reconstructed initial
+%   condition, initial probability, and initial sensitivity. 
 arguments (Input)
     IC
     gene_state
+    gate_param
+    gate_val
 end
 
 arguments (Output)
@@ -85,18 +91,89 @@ for i = 1:length(IC)
     Model_sens.solutionScheme = 'fspSens';
     
     % Solve the sensitivity problem
-    Model_sens.Solutions = Model_sens.solve(Model_sens.Solutions.stateSpace);
+    [~,~,Model_sens] = Model_sens.solve(Model_FSP.Solutions.stateSpace);
+    %% Section 4 - Gating
+    % Make a copy of the Sens Solution for Gating
+    Model_gate = Model_sens;
     
-    %% Section 4 - FIM
+    % Retrieving state space at last time point
+    state = Model_sens.Solutions.fsp{end}.p.data.subs';
+    
+    % Logical gate: only states with 10 or more mRNA
+    gate = state(gate_param,:)>=gate_val+1; % Plus one to transform for 0-indexing
+    
+    % -- PROBABILITY MATRIX --
+    % Retrieving the prob matrix at last time point
+    prob = Model_gate.Solutions.fsp{end}.p.data.vals;
+    
+    % Gate the prob matrix
+    gate_prob = prob(gate); 
+    
+    % Normalize the resulting matrix
+    norm_factor = sum(gate_prob);
+    gate_prob = gate_prob/norm_factor;
+    
+    % -- SENSITIVITY MATRIX --
+    gate_sens = zeros(length(Model.parameters),length(gate_prob));
+    for j = 1:length(Model.parameters)
+        % Retrieving per parameter sensitivity
+        sens = Model_sens.Solutions.sens.data{end}.S(j).data.vals;
+    
+        % Gating
+        gate_sens(j,:) = sens(gate);
+    end
+    
+    % Normalizing the gate_sens matrix
+    gate_sens = gate_sens / norm_factor;
+    
+    % Flipping the gate_sens matrix
+    gate_sens = gate_sens';
+    
+    
+    % -- MODEL SOLUTION --
+    
+    % Redefine model initial conditions
+    Model_gate.initialCondition = state(:,gate)-1; % Minus one for 0-index
+    Model_gate.initialProbs = gate_prob;
+    Model_gate.initialSensitivities = gate_sens;
+    
+    % Solve the model with gated initial conditions
+    [~,~,Model_gate] = Model_gate.solve;
+
+    %% Section 5 - FIM
     % Create a copy of the sens model to compute the FIM
-    Model_FIM = Model_sens;
+    Model_FIM = Model_gate;
     
     % Compute the FIM
     Model_fimResults_temp = Model_FIM.computeFIM(Model_sens.Solutions.sens); 
     
     % For the multi case, concatenate Model_fimResults
     Model_fimResults(1+(i-1)*resolution:i*resolution) = Model_fimResults_temp;
-
+    
+    %% Section 6 - Second FSP Solution
+    % Make a copy of the model for FSP
+    Model_FSP2 = Model_gate;
+    
+    % Set the times at which distributions will be computed:
+    Model_FSP2.tSpan = linspace(0,40,resolution);
+    
+    % Set the solution scheme to FSP
+    Model_FSP2.solutionScheme = 'FSP';
+    
+    % Set the FSP 1-norm error tolerance
+    Model_FSP2.fspOptions.fspTol = 1e-4;
+    
+    % Guess initial bounds on FSP StateSpace
+    Model_FSP2.fspOptions.bounds = [30];
+    
+    % Enable steady state initial distribution approximation
+    Model_FSP2.fspOptions.initApproxSS = false;
+    
+    % Create symbolic propensity functions
+    Model_FSP2 = Model_FSP2.formPropensitiesGeneral('Model_FSP2_dOpt_2',false);
+    
+    % Solve Model
+    Model_FSP2.Solutions = Model_FSP2.solve;
 end
 
 
@@ -152,5 +229,7 @@ end
 
 % Save to results
 results.expectedValues = expectedValues;
-model = Model_FSP;
+model = Model_FSP2;
+
+
 end
