@@ -15,19 +15,19 @@ gene_state = [2;0];
 [results, model_no_gate] = dOpt_bursting(IC, gene_state);
 % bubblePlot(results);
 dOpt_no_gate = results.dOpt;
-model_no_gate.plotFSP(plotType='marginals', indTimes = timeInd)
+% model_no_gate.plotFSP(plotType='marginals', indTimes = timeInd)
 fprintf('The standard [2 0 0] IC case produces a D-Optimality Criterion of %.3e\n',dOpt_no_gate)
 
 %% Section 2 - Solving with gate
-% IC = 0; % Starting with 0 mRNA
-% gene_state = [2;0];
-% gate_param = 3; % Gating for mRNA
-% gate_val = 10; % Gating at 10 to replicate the above IC
-% 
-% [results, model_gate] = dOpt_bursting_gate(IC, gene_state, gate_param, gate_val);
-% % bubblePlot(results);
-% dOpt_gate = results.dOpt;
-% model_gate.plotFSP(plotType='marginals', indTimes = timeInd)
+IC = 0; % Starting with 0 mRNA
+gene_state = [2;0];
+gate_param = 3; % Gating for mRNA
+gate_val = 10; % Gating at 10 to replicate the above IC
+
+[results, model_gate] = dOpt_bursting_gate(IC, gene_state, gate_param, gate_val);
+% bubblePlot(results);
+dOpt_gate = results.dOpt;
+model_gate.plotFSP(plotType='marginals', indTimes = timeInd)
 
 %% Section 3 - Solving with gate test for comparison to standard IC case
 IC = 0; % Starting with 0 mRNA
@@ -36,7 +36,7 @@ gene_state = [2;0];
 [results, model_gate] = dOpt_bursting_gate_test(IC, gene_state, [2 0 0]);
 % bubblePlot(results);
 dOpt_gate_test = results.dOpt;
-model_gate.plotFSP(plotType='marginals', indTimes = timeInd)
+% model_gate.plotFSP(plotType='marginals', indTimes = timeInd)
 fprintf('The gated [2 0 0] IC case produces a D-Optimality Criterion of %.3e\n',dOpt_gate_test)
 
 % -- OBSERRVATIONS -- 
@@ -56,15 +56,28 @@ gene_state = [2;0];
 [results, model_no_gate] = dOpt_bursting(IC, gene_state);
 % bubblePlot(results);
 dOpt_no_gate = results.dOpt;
-model_no_gate.plotFSP(plotType='marginals', indTimes = timeInd, Title="No Gate Case")
+% model_no_gate.plotFSP(plotType='marginals', indTimes = timeInd, Title="No Gate Case")
 fprintf('The standard [2 0 0] IC case produces a D-Optimality Criterion of %.3e\n',dOpt_no_gate)
 
+%%
 % -- GATE [2 0 10] to [2 0 0] ---
-IC = 10; % Starting with 0 mRNA
+IC = 40; % Starting with 0 mRNA
 gene_state = [2;0];
 
 [results, model_gate] = dOpt_bursting_gate_test(IC, gene_state, [2 0 0]);
 % bubblePlot(results);
 dOpt_gate_test = results.dOpt;
-model_gate.plotFSP(plotType='marginals', indTimes = timeInd)
+% model_gate.plotFSP(plotType='marginals', indTimes = timeInd)
 fprintf('The gated [2 0 10] to [2 0 0] IC case produces a D-Optimality Criterion of %.3e\n',dOpt_gate_test)
+
+
+%%
+% -- GATE [2 0 0] to [2 0 0] ---
+IC = 0; % Starting with 0 mRNA
+gene_state = [2;0];
+
+[results, model_gate] = dOpt_bursting_gate_test(IC, gene_state, [2 0 0]);
+% bubblePlot(results);
+dOpt_gate_test = results.dOpt;
+% model_gate.plotFSP(plotType='marginals', indTimes = timeInd)
+fprintf('The gated [2 0 0] to [2 0 0] IC case produces a D-Optimality Criterion of %.3e\n',dOpt_gate_test)

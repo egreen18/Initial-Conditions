@@ -109,6 +109,7 @@ for i = 1:length(IC)
     gate_2 = state(2,:)==gate(2)+1;
     gate_3 = state(3,:)==gate(3)+1;
     gate = gate_1 & gate_2 & gate_3;
+    % gate = gate_3;
     
     % -- PROBABILITY MATRIX --
     % Retrieving the prob matrix at last time point
@@ -118,8 +119,8 @@ for i = 1:length(IC)
     gate_prob = prob(gate); 
     
     % Normalize the resulting matrix
-    norm_factor = sum(gate_prob);
-    gate_prob = gate_prob/norm_factor;
+    norm_factor = 1/sum(gate_prob);
+    gate_prob_norm = gate_prob*norm_factor;
     
     % -- SENSITIVITY MATRIX --
     gate_sens = zeros(length(Model.parameters),length(gate_prob));
@@ -132,7 +133,7 @@ for i = 1:length(IC)
     end
     
     % Normalizing the gate_sens matrix
-    gate_sens = gate_sens / norm_factor;
+    % gate_sens = gate_sens * norm_factor;
     
     % Flipping the gate_sens matrix
     gate_sens = gate_sens';
@@ -142,8 +143,10 @@ for i = 1:length(IC)
     
     % Redefine model initial conditions
     Model_gate.initialCondition = state(:,gate)-1; % Minus one for 0-index
-    Model_gate.initialProbs = gate_prob;
-    Model_gate.initialSensitivities = gate_sens;
+    Model_gate.initialProbs = gate_prob_norm;
+    % gate_sens = [0 0 0 0];
+    gate_sens_norm = norm_factor*gate_sens - gate_prob*norm_factor^2*sum(gate_sens,1);
+    Model_gate.initialSensitivities = gate_sens_norm;
     
     % Solve the model with gated initial conditions
     [~,~,Model_gate] = Model_gate.solve;
@@ -153,7 +156,7 @@ for i = 1:length(IC)
     Model_FIM = Model_gate;
     
     % Compute the FIM
-    Model_fimResults_temp = Model_FIM.computeFIM(Model_sens.Solutions.sens); 
+    Model_fimResults_temp = Model_FIM.computeFIM(Model_gate.Solutions.sens); 
     
     % For the multi case, concatenate Model_fimResults
     Model_fimResults(1+(i-1)*resolution:i*resolution) = Model_fimResults_temp;
