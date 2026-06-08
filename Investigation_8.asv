@@ -1,0 +1,35 @@
+%% Content
+% This investigation uses the developed birth_Death_sim_data and
+% plotUncertaintyEllipse functions to check the ability of the FIM to
+% correctly predict uncertainty for various initial conditions of the Birth
+% Death model with the following parameters:
+%
+% k_birth   =   1
+% k_death   =   0.1
+% tSpan     =  [0,40]
+%
+% This system equilbriates to a population of 10 with a half life of 6.93s
+
+%% Preliminaries:
+clear
+close all
+clc
+addpath(genpath('../Rotation/SSIT'));
+
+%% Section 1 - Testing the infrastructure
+% Parameterizing the model
+IC = 0;
+
+% Simulating data
+[theta] = birth_Death_sim_data(IC, 5);
+
+% Unpacking results
+param1 = theta(1,:);
+param2 = theta(2,:);
+
+% Solving the FIM
+results = dOpt
+% Plotting
+
+
+%% Section 2 - Solving for IC = 0 and nSim = 100

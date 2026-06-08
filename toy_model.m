@@ -17,8 +17,8 @@ Model = SSIT;
 Model.species = {'X'};   
 
 % Initial Conditions
-Model.initialCondition = [0, 20];
-Model.initialProbs = [0.75, 0.25];
+Model.initialCondition = 0;
+% Model.initialProbs = [0.75, 0.25];
 
 % Set stoichiometry of reactions
 Model.stoichiometry = [1,-1];   % [birth, death]
@@ -50,7 +50,7 @@ Model_ODE = Model_ODE.formPropensitiesGeneral('Model_ODE_2',false);
 Model_ODE.Solutions = Model_ODE.solve;
 
 % Plot ODE Solutions
-Model_ODE.plotODE(Model_ODE.species, Model_ODE.tSpan,...
+Model_ODE.plotODE(Model_ODE.species,...
     {'linewidth',4}, Title='Birth-Death ODE Soln', TitleFontSize=24,...
     AxisLabelSize=18, TickLabelSize=18, LegendFontSize=15,...
     LegendLocation='east', XLabel='Time', YLabel='Molecule Count')

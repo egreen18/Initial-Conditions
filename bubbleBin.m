@@ -12,7 +12,7 @@ arguments (Input)
     tSpan
     expectedValue
     nSamples
-    nBins = length(tSpan)/2
+    nBins = length(tSpan)
 end
 
 arguments (Output)
@@ -23,9 +23,9 @@ end
 
 % ERROR CHECKING
 % Checking for too many bins
-if nBins > length(tSpan)/ 2
-    error('Number of bins cannot exceed the 1/2 the length of the time span.');
-end
+% if nBins > length(tSpan)/ 2
+%     error('Number of bins cannot exceed the 1/2 the length of the time span.');
+% end
 
 % Binning tSpan and counting data in bins
 x_p = ones(1,nBins);

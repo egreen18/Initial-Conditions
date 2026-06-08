@@ -65,8 +65,12 @@ if multi
         [x,y,sz] = bubbleBin(results.tSpan, results.expectedValues(:,i), ...
             results.optimalExperiment(1+(i-1)*resolution:i*resolution));
         bubblechart(x,y,sz,'DisplayName','Optimal Sampling')
-        low = max(min(sz),40);
-        bubblesize([low,max(sz)]*50/max(sz))
+        if length(sz) > 1
+            low = max(min(sz),40);
+            if low < max(sz)
+                bubblesize([low,max(sz)]*50/max(sz))
+            end
+        end
         
         hold off
         
@@ -110,8 +114,12 @@ else
     [x,y,sz] = bubbleBin(results.tSpan, results.expectedValues, ...
         results.optimalExperiment);
     bubblechart(x,y,sz,'DisplayName','Optimal Sampling')
-    low = max(min(sz),40);
-    bubblesize([low,max(sz)]*50/max(sz))
+    if length(sz) > 1
+        low = max(min(sz),40);
+        if low < max(sz)
+            bubblesize([low,max(sz)]*50/max(sz))
+        end
+    end
     
     hold off
     

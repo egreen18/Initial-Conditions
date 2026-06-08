@@ -84,17 +84,54 @@ disp("Saved results to Investigation_4_Results in the cache.")
 % readily have an explanation for why information would pivot here.
 %
 % Now lets move on to super-eq studies
+if isfile("cache/Investigation_4_IC_Summary.mat")
+    load("cache/Investigation_4_IC_Summary.mat")
+    disp("Loaded results from the cache.")
+else
+    % Off Gene
+    disp("Solving the Off Gene Regime...")
+    IC = 0:1:20;
+    gene_state = [2;0];
+    all_dOpt_off = zeros(1,length(IC));
+    for i = 1:length(IC)
+        results = dOpt_bursting(IC(i), gene_state);
+        all_dOpt_off(i) = results.dOpt;
+    end
+    save("cache/Investigation_4_IC_Summary.mat", 'all_dOpt_off');
 
-load("cache/Investigation_4_Results.mat")
-disp("Loaded results from the cache.")
+    % On Gene
+    disp("Solving the On Gene Regime...")
+    IC = 0:1:20;
+    gene_state = [0;2];
+    all_dOpt_on = zeros(1,length(IC));
+    for i = 1:length(IC)
+        results = dOpt_bursting(IC(i), gene_state);
+        all_dOpt_on(i) = results.dOpt;
+    end
+    save("cache/Investigation_4_IC_Summary.mat", 'all_dOpt_on');
 
-IC = 0:1:10;
+    % Eq Gene
+    disp("Solving the Eq Gene Regime...")
+    IC = 0:1:20;
+    gene_state = [1;1];
+    all_dOpt_eq = zeros(1,length(IC));
+    for i = 1:length(IC)
+        results = dOpt_bursting(IC(i), gene_state);
+        all_dOpt_eq(i) = results.dOpt;
+    end
+    save("cache/Investigation_4_IC_Summary.mat", 'all_dOpt_eq');
+    
+    % Finished
+    disp("Solved all three regimes and stored data in cache/Investigation_4_IC_Summary.mat")
+end
+
+IC = 0:1:20;
 
 figure()
 hold on
 grid on
-plot(IC, all_dOpt_off, 'DisplayName', 'All Genes On at t0', 'LineWidth',2)
-plot(IC, all_dOpt_on, 'DisplayName', 'All Genes Off at t0', 'LineWidth',2)
+plot(IC, all_dOpt_on, 'DisplayName', 'All Genes On at t0', 'LineWidth',2)
+plot(IC, all_dOpt_off, 'DisplayName', 'All Genes Off at t0', 'LineWidth',2)
 plot(IC, all_dOpt_eq, 'DisplayName', 'Gene Equilibrium at t0', 'LineWidth',2)
 legend
 xlabel('Initial mRNA Population')

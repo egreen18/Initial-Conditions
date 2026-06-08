@@ -116,6 +116,7 @@ optimal_experiment = Model_FIM.optimizeCellCounts(Model_fimResults,...
 
 % Save to results
 results.dOpt = det(Model_fimTotal_opt{1});
+Model_FIM.plotFIMResults(Model_fimTotal_opt,)
 
 %% Section 5 - Solve ODE model
 % Make a copy of the model for ODE

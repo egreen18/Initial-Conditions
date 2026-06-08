@@ -1,4 +1,4 @@
-function [results, model] = dOpt_bursting_gate_test(IC, gene_state, gate)
+function [results, model] = dOpt_bursting_gate_PDO(IC, gene_state, gate, standard_deviation)
 %DOPT_SOLVE Solves the Toy Bursting-Gene model for the dOpt criterion
 %   Takes a scaler Initial Condition value and returns the "results"
 %   structure which contains multiple computed results. The function may
@@ -11,15 +11,15 @@ function [results, model] = dOpt_bursting_gate_test(IC, gene_state, gate)
 %   provided inputs and the solution continues with a reconstructed initial
 %   condition, initial probability, and initial sensitivity. 
 %
-%   This modification of the gate wraper is meant to test if the gate logic
-%   is able to produce the same results as the initial condition logic as
-%   measured by the D-Optimality Criterion. 
+%   This modification of the gate wraper is meant to enable the
+%   implementation of a PDO as the gate.
 %
 %   Takes "gate" as an inpute, which is a vector of 3 gate values.
 arguments (Input)
     IC
     gene_state
     gate
+    standard_deviation
 end
 
 arguments (Output)
@@ -97,7 +97,7 @@ for i = 1:length(IC)
     
     % Solve the sensitivity problem
     [~,~,Model_sens] = Model_sens.solve(Model_FSP.Solutions.stateSpace);
-    %% Section 4 - GATING
+    %% Section 4 - Gating
     % Make a copy of the Sens Solution for Gating
     Model_gate = Model_sens;
     
@@ -114,9 +114,12 @@ for i = 1:length(IC)
     % -- PROBABILITY MATRIX --
     % Retrieving the prob matrix at last time point
     prob = Model_gate.Solutions.fsp{end}.p.data.vals;
+
+    % Applying a gaussian transformation to the logical gate
+    gate = gaussian_gate(gate, standard_deviation, true);
     
     % Gate the prob matrix
-    gate_prob = prob(gate); 
+    gate_prob = prob'.*gate; 
     
     % Normalize the resulting matrix
     norm_factor = 1/sum(gate_prob);
@@ -129,7 +132,7 @@ for i = 1:length(IC)
         sens = Model_sens.Solutions.sens.data{end}.S(j).data.vals;
     
         % Gating
-        gate_sens(j,:) = sens(gate);
+        gate_sens(j,:) = sens'.*gate;
     end
     
     % Normalizing the gate_sens matrix
@@ -142,10 +145,10 @@ for i = 1:length(IC)
     % -- MODEL SOLUTION --
     
     % Redefine model initial conditions
-    Model_gate.initialCondition = state(:,gate)-1; % Minus one for 0-index
+    Model_gate.initialCondition = state-1; % Minus one for 0-index, all states included
     Model_gate.initialProbs = gate_prob_norm;
     % gate_sens = [0 0 0 0];
-    gate_sens_norm = norm_factor*gate_sens - gate_prob*norm_factor^2*sum(gate_sens,1);
+    gate_sens_norm = norm_factor*gate_sens - gate_prob'*norm_factor^2*sum(gate_sens,1);
     Model_gate.initialSensitivities = gate_sens_norm;
     
     % Solve the model with gated initial conditions

@@ -43,7 +43,7 @@ fprintf('The gated [2 0 0] IC case produces a D-Optimality Criterion of %.3e\n',
 % System A solves for D-Opt via the standard route for the system with IC [2 0 0].
 % System B solves for D-Opt by running the [2 0 0] IC simulation to steady
 % state, and then gating again for a reset IC of [2 0 0]. This process is
-% able to produce equivelant information values per D-Opt, which is a good
+% able to produce equivalant information values per D-Opt, which is a good
 % proof of concept. Let's consider different starting points? Are all
 % steady states of the same quality? Or does a system retain some
 % information about it's initial conditions even after sitting in steady
@@ -61,14 +61,15 @@ fprintf('The standard [2 0 0] IC case produces a D-Optimality Criterion of %.3e\
 
 %%
 % -- GATE [2 0 10] to [2 0 0] ---
-IC = 40; % Starting with 0 mRNA
+IC = 10; % Starting with 0 mRNA
 gene_state = [2;0];
 
 [results, model_gate] = dOpt_bursting_gate_test(IC, gene_state, [2 0 0]);
 % bubblePlot(results);
 dOpt_gate_test = results.dOpt;
 % model_gate.plotFSP(plotType='marginals', indTimes = timeInd)
-fprintf('The gated [2 0 10] to [2 0 0] IC case produces a D-Optimality Criterion of %.3e\n',dOpt_gate_test)
+fprintf('The gated [2 0 %.0f] to [2 0 0] IC case produces a D-Optimality Criterion of %.3e\n',...
+    [IC, dOpt_gate_test])
 
 
 %%
